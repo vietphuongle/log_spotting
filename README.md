@@ -15,3 +15,7 @@ $ make
 ## Running
 
 $ ./log_spotting <path/to/a/query/image>
+
+## Example
+
+$ ./log_spotting images/10_R2.jpg

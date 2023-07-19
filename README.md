@@ -24,4 +24,4 @@ $ ./log_spotting images/10_R2.jpg
 
 1. Copy the image to images folder
 2. Add the image name to list_logs.txt
-3. Modidy the number of registered log images
+3. Modify the number of registered log images

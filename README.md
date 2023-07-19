@@ -1,4 +1,5 @@
-# log_spotting
+# log spotting
 
-Query: Image
-Dataset: 44 Log images
+Query: a log image taken after a few weeks
+
+Dataset: 44 registered log images

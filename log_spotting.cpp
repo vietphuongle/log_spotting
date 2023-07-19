@@ -196,28 +196,23 @@ float matching(Element log, Element image, vector<DMatch> &inlier_matches, Mat &
 	return (float)inlier_matches.size()/log.descriptors.rows;
 }
 
-void draw_matches(Element log, Element image, vector<DMatch> good_matches, Mat H, string name, float rs){
+Mat draw_matches(Element log, Element image, vector<DMatch> good_matches, Mat H, float rs){
 	//-- Draw matches
 	Mat img_matches;
 	drawMatches(log.image, log.keypoints, image.image, image.keypoints, good_matches, img_matches, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
 
-	vector<Point2f> log_corners(4);
-	log_corners[0] = Point2f(0, 0);
-	log_corners[1] = Point2f((float)log.image.cols, 0);
-	log_corners[2] = Point2f((float)log.image.cols, (float)log.image.rows);
-	log_corners[3] = Point2f(0, (float)log.image.rows);
-	vector<Point2f> image_corners(4);
-	perspectiveTransform(log_corners, image_corners, H);
-	//-- Draw lines between the corners (the mapped object in the scene - image_2)
-	line(img_matches, image_corners[0] + Point2f((float)log.image.cols, 0), image_corners[1] + Point2f((float)log.image.cols, 0), Scalar(0, 255, 0), 4);
-	line(img_matches, image_corners[1] + Point2f((float)log.image.cols, 0), image_corners[2] + Point2f((float)log.image.cols, 0), Scalar(0, 255, 0), 4);
-	line(img_matches, image_corners[2] + Point2f((float)log.image.cols, 0), image_corners[3] + Point2f((float)log.image.cols, 0), Scalar(0, 255, 0), 4);
-	line(img_matches, image_corners[3] + Point2f((float)log.image.cols, 0), image_corners[0] + Point2f((float)log.image.cols, 0), Scalar(0, 255, 0), 4);
-
 	int fontFace = FONT_HERSHEY_SIMPLEX;
     putText(img_matches, to_string(rs), Point(img_matches.cols/2,100), fontFace, 4, Scalar(0,255,0), 5);
 
-	imwrite(name,img_matches);
+    /*
+    int targetWidth = 1000;
+    int targetHeight = static_cast<int>((static_cast<double>(targetWidth) / img_matches.cols) * img_matches.rows);
+
+    Mat outputImage;
+    resize(img_matches, outputImage, cv::Size(targetWidth, targetHeight), 0, 0, cv::INTER_LINEAR);
+	*/
+
+	return img_matches;
 }
 
 int main(int argc, char* argv[]){
@@ -227,19 +222,41 @@ int main(int argc, char* argv[]){
 	cout << "Reading query image..." << endl;
 	string image_name(argv[1]);
 	Element image = read_image(image_name);
-	int count=0;
+	vector<Mat> result_images;
+	vector<float> rs;
+	bool found=false;
 	for(int l=0;l<nb_logs;l++){
-		cout << "Matching with log: " << l << " => ";
+		cout << "Matching with log " << l << " => ";
 		vector<DMatch> good_matches;
 		Mat H;
-		float rs = matching(logs[l], image, good_matches, H);
-		if (rs>=0.0005) {
-			count++;
-			cout << "matched" << endl;
-			draw_matches(logs[l],image,good_matches, H, "rs_"+to_string(count)+".jpg", rs);
+		float r = matching(logs[l], image, good_matches, H);
+		if (r>=0.0005) {
+			cout << "MATCHED" << endl;
+			result_images.push_back(draw_matches(logs[l],image,good_matches, H, r));
+			rs.push_back(r);
+			found = true;
 		} else {
 			cout << "unmatched" << endl;
 		}
 	}
+
+	if (found) {
+		//sort based on rs
+	    //std::iota(indices.begin(), indices.end(), 0);
+	    std::vector<int> indices;
+	    for (size_t i = 0; i < rs.size(); ++i) {
+	        indices.push_back(i);
+	    }
+
+	    std::sort(indices.begin(), indices.end(), [&](int i, int j) {
+	        return rs[i] > rs[j]; // Change to '<' if you want to sort in descending order
+	    });
+
+	    for (size_t i = 0; i < rs.size(); ++i) {
+	        imwrite("rs_"+to_string(i+1)+".jpg",result_images[indices[i]]);
+	    }
+	    cout << rs.size() << " matched log(s)" << endl;
+	}
+	cout << "Finished" << endl;
 	return 0;
 }

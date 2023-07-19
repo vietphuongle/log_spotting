@@ -8,3 +8,6 @@ Dataset: 44 registered log images
 
 $ make
 
+## Running
+
+$ ./log_spotting <path/to/query/image>

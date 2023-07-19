@@ -31,7 +31,7 @@ struct Element{
 
 vector<Element> logs;
 
-int nb_logs, nb_images;
+int nb_logs;
 const string path("");
 const string path_logs(path+"logs");
 const string path_images(path+"images");
@@ -256,6 +256,8 @@ int main(int argc, char* argv[]){
 	        imwrite("rs_"+to_string(i+1)+".jpg",result_images[indices[i]]);
 	    }
 	    cout << rs.size() << " matched log(s)" << endl;
+	} else {
+		cout << "The query image does not match with any log." << endl;
 	}
 	cout << "Finished" << endl;
 	return 0;
